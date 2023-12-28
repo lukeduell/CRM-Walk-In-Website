@@ -18,8 +18,8 @@ The list screen allows for users to sort all the available entries by different 
 
 The add entries page allows for users to add information about customers as well as upload pictures that use firebase storage to hold images.
 
-![Add](imgs/IMG_0175.jpg)
+![Add](imgs/Add.jpg)
 
 The edit entries page allows for users to change any data that has been added, delete pictures, and add new pictures.
 
-![Edit](imgs/IMG_0176.jpg)
+![Edit](imgs/Edit.jpg)
