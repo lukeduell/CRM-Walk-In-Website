@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>List of Entries</title>
+  <link rel="stylesheet" href="liststyles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="header">
+    <h1>List of Entries</h1>
+    <button class="add-entry-btn" onclick="redirectToAddPage()">Add Entry</button>
+  </div>
+
+  <div class="pagination">
+    <button id="firstPageTop">First Page</button>
+    <button id="prevPageTop">Previous</button>
+    <span id="currentPage">Page 1</span>
+    <button id="nextPageTop">Next</button>
+  </div>
+
+  <div class="sort-container">
+    <label for="sortBy">Sort By:</label>
+    <select id="sortBy">
+        <option value="dateArrivedAZ">Date Arrived New to Old</option>
+        <option value="dateArrivedZA">Date Arrived Old to New</option>
+        <option value="nameAZ">Name A to Z</option>
+        <option value="nameZA">Name Z to A</option>
+        <option value="description">Description</option>
+        <option value="color">Color</option>
+    </select>
+  </div>
+
+  <ul id="entryList"></ul>
+
+  <div class="pagination">
+    <button id="firstPage">First Page</button>
+    <button id="prevPage">Previous</button>
+    <button id="nextPage">Next</button>
+  </div>
+  
+
+  <script>
+    function redirectToAddPage() {
+      window.location.href = 'add.html';
+    }
+    // Function to handle editing an entry
+    function editEntry(entryId) {
+      // Redirect to edit.html with the entryId
+      window.location.href = `edit.html?id=${entryId}`;
+    }
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import firebaseConfig from './firebaseConfig.js';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let sortByField = 'dateArrivedAZ';
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in.
+        displayEntries(); // Call the function to display entries
+      } else {
+        // No user is signed in.
+        // Redirect to the login page or handle authentication as needed
+        window.location.href = "index.html";
+      }
+    });
+
+    // Display entries and handle sorting
+    async function displayEntries(page = 1, itemsPerPage = 50) {
+        const entryList = document.getElementById('entryList');
+        entryList.innerHTML = ''; // Clear previous list items
+
+        try {
+          const querySnapshot = await getDocs(collection(db, 'CustomerCollection'));
+          const entries = [];
+          querySnapshot.forEach((doc) => {
+              entries.push({ id: doc.id, ...doc.data() });
+          });
+
+          if (sortByField === 'dateArrivedAZ') {
+              entries.sort((a, b) => {
+              const fieldA = a.date ? b.date.toDate() : new Date(0);
+              const fieldB = b.date ? a.date.toDate() : new Date(0);
+              return fieldA - fieldB;
+              });
+          } else if (sortByField === 'dateArrivedZA') {
+              entries.sort((a, b) => {
+              const fieldA = a.date ? a.date.toDate() : new Date(0);
+              const fieldB = b.date ? b.date.toDate() : new Date(0);
+              return fieldA - fieldB;
+              });
+          } else if (sortByField === 'nameAZ') {
+              entries.sort((a, b) => a.firstandlast.localeCompare(b.firstandlast));
+          } else if (sortByField === 'nameZA') {
+              entries.sort((a, b) => b.firstandlast.localeCompare(a.firstandlast));
+          } else if (sortByField === 'description') {
+              entries.sort((a, b) => a.description.localeCompare(b.description));
+          } else if (sortByField === 'color') {
+              entries.sort((a, b) => a.color.localeCompare(b.color));
+          }
+
+          const startIndex = (page - 1) * itemsPerPage;
+          const paginatedEntries = entries.slice(startIndex, startIndex + itemsPerPage);
+
+          // Create list items and append to the list paginatedEntries was changed from entries
+          paginatedEntries.forEach((entry) => {
+              const dateArrived = entry.date ? formatDate(entry.date.toDate()) : ''; // Format timestamp
+              const name = entry.firstandlast || '';
+              const description = entry.description || '';
+              const color = entry.color || '';
+
+              const listItem = document.createElement('li');
+              const detailsContainer = document.createElement('div');
+              detailsContainer.classList.add('details-container');
+              listItem.appendChild(detailsContainer);
+
+              // Create spans with classes for each detail
+              const dateSpan = document.createElement('span');
+              dateSpan.textContent = `Date Arrived: ${dateArrived}`;
+              dateSpan.classList.add('list-date');
+              detailsContainer.appendChild(dateSpan);
+
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = `Name: ${name}`;
+              nameSpan.classList.add('list-name');
+              detailsContainer.appendChild(nameSpan);
+
+              const descSpan = document.createElement('span');
+              descSpan.textContent = `Description: ${description}`;
+              descSpan.classList.add('list-description');
+              detailsContainer.appendChild(descSpan);
+
+              const colorSpan = document.createElement('span');
+              colorSpan.textContent = `Color: ${color}`;
+              colorSpan.classList.add('list-color');
+              detailsContainer.appendChild(colorSpan);
+
+              //adding functionality so the user can click on the entry.
+              listItem.classList.add('clickable'); // Add a class to style the cursor as pointer
+              listItem.addEventListener('click', () => {
+                  editEntry(entry.id); // Call editEntry function when clicked
+              });
+
+              entryList.appendChild(listItem);
+          });
+        } catch (error) {
+        console.error('Error fetching entries:', error.message);
+        }
+    }
+
+    document.getElementById('sortBy').addEventListener('change', (event) => {
+      sortByField = event.target.value;
+      displayEntries(currentPage, itemsPerPage);
+    });
+
+
+    // Function to format date
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month starts from 0
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Call the function to display entries when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        displayEntries(); // Display entries by default sorted by dateArrived
+    });
+
+    // Function to handle pagination
+    let currentPage = 1;
+    const itemsPerPage = 50;
+
+    function updatePaginationButtons() {
+      document.getElementById('currentPage').textContent = `Page ${currentPage}`;
+    }
+
+    // Previous Page button
+    document.getElementById('prevPage').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayEntries(currentPage, itemsPerPage);
+            updatePaginationButtons();
+        }
+    });
+
+    // Next Page button
+    document.getElementById('nextPage').addEventListener('click', () => {
+        const totalEntries = 1000; // Example total entries
+        const totalPages = Math.ceil(totalEntries / itemsPerPage);
+
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayEntries(currentPage, itemsPerPage);
+            updatePaginationButtons();
+        }
+    });
+
+    // First Page button
+    document.getElementById('firstPage').addEventListener('click', () => {
+        currentPage = 1;
+        displayEntries(currentPage, itemsPerPage);
+        updatePaginationButtons();
+    });
+
+    document.getElementById('prevPageTop').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        displayEntries(currentPage, itemsPerPage);
+        updatePaginationButtons();
+      }
+    });
+
+    document.getElementById('nextPageTop').addEventListener('click', () => {
+      const totalEntries = 1000; // Example total entries
+      const totalPages = Math.ceil(totalEntries / itemsPerPage);
+
+      if (currentPage < totalPages) {
+        currentPage++;
+        displayEntries(currentPage, itemsPerPage);
+        updatePaginationButtons();
+      }
+    });
+
+    document.getElementById('firstPageTop').addEventListener('click', () => {
+      currentPage = 1;
+      displayEntries(currentPage, itemsPerPage);
+      updatePaginationButtons();
+    });
+
+    // Call displayEntries with default parameters when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      displayEntries(currentPage, itemsPerPage);
+      updatePaginationButtons();
+    });
+
+  </script>
+</body>
+</html>

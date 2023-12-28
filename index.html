@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="loginstyles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="header">
+    <img src="logo.png" alt="Your Logo" class="logo">
+  </div>
+
+  <div class="login-container">
+
+    <form id="loginForm">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <div id="errorMessage" style="display: none; color: red;"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import firebaseConfig from './firebaseConfig.js';
+
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // On successful login, redirect the user
+        window.location.href = "list.html"; // Redirect to the list page after successful login
+      } catch (error) {
+        // Show error message for failed login
+        document.getElementById('errorMessage').textContent = "Login failed. Please check your credentials.";
+        document.getElementById('errorMessage').style.display = "block";
+        console.error('Login failed:', error.message);
+      }
+    });
+  </script>
+</body>
+</html>
