@@ -11,26 +11,30 @@
 <body>
   <div class="header">
     <h1>List of Entries</h1>
-    <button class="add-entry-btn" onclick="redirectToAddPage()">Add Entry</button>
   </div>
-
-  <div class="pagination">
-    <button id="firstPageTop">First Page</button>
-    <button id="prevPageTop">Previous</button>
-    <span id="currentPage">Page 1</span>
-    <button id="nextPageTop">Next</button>
-  </div>
-
-  <div class="sort-container">
-    <label for="sortBy">Sort By:</label>
-    <select id="sortBy">
+  <br>
+  <div class="search-and-sort">
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by name or description...">
+    </div>
+    <div class="sort-container">
+      <label for="sortBy">Sort By:</label>
+      <select id="sortBy">
         <option value="dateArrivedAZ">Date Arrived New to Old</option>
         <option value="dateArrivedZA">Date Arrived Old to New</option>
         <option value="nameAZ">Name A to Z</option>
         <option value="nameZA">Name Z to A</option>
         <option value="description">Description</option>
         <option value="color">Color</option>
-    </select>
+      </select>
+    </div>
+  </div>
+  
+  <div class="pagination">
+    <button id="firstPageTop">First Page</button>
+    <button id="prevPageTop">Previous</button>
+    <span id="currentPage">Page 1</span>
+    <button id="nextPageTop">Next</button>
   </div>
 
   <ul id="entryList"></ul>
@@ -75,6 +79,26 @@
         window.location.href = "index.html";
       }
     });
+
+
+    function performSearch() {
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const entryList = document.getElementById('entryList');
+      const entries = entryList.querySelectorAll('li');
+
+      entries.forEach((entry) => {
+        const name = entry.querySelector('.list-name').textContent.toLowerCase();
+        const description = entry.querySelector('.list-description').textContent.toLowerCase();
+
+        // Show or hide the entry based on the search query match
+        if (name.includes(searchQuery) || description.includes(searchQuery)) {
+          entry.style.display = 'block';
+        } else {
+          entry.style.display = 'none';
+        }
+      });
+    }
+
 
     // Display entries and handle sorting
     async function displayEntries(page = 1, itemsPerPage = 50) {
@@ -243,6 +267,15 @@
     window.addEventListener('DOMContentLoaded', () => {
       displayEntries(currentPage, itemsPerPage);
       updatePaginationButtons();
+    });
+
+    // Event listener for the search input
+    document.getElementById('searchInput').addEventListener('input', performSearch);
+
+    // Call the function to display entries when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      displayEntries(); // This is your function to display entries
+      updatePaginationButtons(); // This is your function to update pagination buttons
     });
 
   </script>
