@@ -11,6 +11,7 @@
 <body>
   <div class="header">
     <h1>List of Entries</h1>
+    <button class="add-entry-btn" onclick="redirectToAddPage()">Add Entry</button>
   </div>
   <br>
   <div class="search-and-sort">
@@ -80,24 +81,91 @@
       }
     });
 
+    // Define a global variable to hold all entries
+    let allEntries = [];
+
+    // Function to fetch and store all entries
+    async function fetchAllEntries() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'CustomerCollection'));
+        allEntries = [];
+        querySnapshot.forEach((doc) => {
+          allEntries.push({ id: doc.id, ...doc.data() });
+        });
+        displayEntries(currentPage, itemsPerPage);
+      } catch (error) {
+        console.error('Error fetching entries:', error.message);
+      }
+    }
+
+    // Call fetchAllEntries when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchAllEntries(); // Fetch and store all entries
+    });
 
     function performSearch() {
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      if (searchQuery === '') {
+        // If the search bar is empty, display entries based on current sorting method
+        displayEntries(currentPage, itemsPerPage);
+        return;
+      }
+
+      const filteredEntries = allEntries.filter((entry) => {
+        const name = entry.firstandlast.toLowerCase();
+        const description = entry.description.toLowerCase();
+
+        return name.includes(searchQuery) || description.includes(searchQuery);
+      });
+
+      // Clear the current list and display the filtered entries
       const entryList = document.getElementById('entryList');
-      const entries = entryList.querySelectorAll('li');
+      entryList.innerHTML = '';
 
-      entries.forEach((entry) => {
-        const name = entry.querySelector('.list-name').textContent.toLowerCase();
-        const description = entry.querySelector('.list-description').textContent.toLowerCase();
+      filteredEntries.forEach((entry) => {
+        const dateArrived = entry.date ? formatDate(entry.date.toDate()) : ''; // Format timestamp
+        const name = entry.firstandlast || '';
+        const description = entry.description || '';
+        const color = entry.color || '';
 
-        // Show or hide the entry based on the search query match
-        if (name.includes(searchQuery) || description.includes(searchQuery)) {
-          entry.style.display = 'block';
-        } else {
-          entry.style.display = 'none';
-        }
+        const listItem = document.createElement('li');
+        const detailsContainer = document.createElement('div');
+        detailsContainer.classList.add('details-container');
+        listItem.appendChild(detailsContainer);
+
+        // Create spans with classes for each detail
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = `Date Arrived: ${dateArrived}`;
+        dateSpan.classList.add('list-date');
+        detailsContainer.appendChild(dateSpan);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = `Name: ${name}`;
+        nameSpan.classList.add('list-name');
+        detailsContainer.appendChild(nameSpan);
+
+        const descSpan = document.createElement('span');
+        descSpan.textContent = `Description: ${description}`;
+        descSpan.classList.add('list-description');
+        detailsContainer.appendChild(descSpan);
+
+        const colorSpan = document.createElement('span');
+        colorSpan.textContent = `Color: ${color}`;
+        colorSpan.classList.add('list-color');
+        detailsContainer.appendChild(colorSpan);
+
+        // Add click functionality
+        listItem.classList.add('clickable');
+        listItem.addEventListener('click', () => {
+          editEntry(entry.id);
+        });
+
+        entryList.appendChild(listItem);
       });
     }
+
+
 
 
     // Display entries and handle sorting
@@ -197,10 +265,6 @@
         return `${year}-${month}-${day}`;
     }
 
-    // Call the function to display entries when the page loads
-    window.addEventListener('DOMContentLoaded', () => {
-        displayEntries(); // Display entries by default sorted by dateArrived
-    });
 
     // Function to handle pagination
     let currentPage = 1;
@@ -263,19 +327,14 @@
       updatePaginationButtons();
     });
 
-    // Call displayEntries with default parameters when the page loads
-    window.addEventListener('DOMContentLoaded', () => {
-      displayEntries(currentPage, itemsPerPage);
-      updatePaginationButtons();
-    });
-
     // Event listener for the search input
     document.getElementById('searchInput').addEventListener('input', performSearch);
 
-    // Call the function to display entries when the page loads
+    // Call the function to display entries and update pagination when the page loads
     window.addEventListener('DOMContentLoaded', () => {
-      displayEntries(); // This is your function to display entries
+      displayEntries(currentPage, itemsPerPage); // This is your function to display entries
       updatePaginationButtons(); // This is your function to update pagination buttons
+      performSearch(); // Call the search function on page load
     });
 
   </script>
