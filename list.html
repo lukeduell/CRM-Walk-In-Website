@@ -69,6 +69,8 @@
     const auth = getAuth(app);
 
     let sortByField = 'dateArrivedAZ';
+    let currentPage = 1;
+    const itemsPerPage = 50;
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -164,9 +166,6 @@
         entryList.appendChild(listItem);
       });
     }
-
-
-
 
     // Display entries and handle sorting
     async function displayEntries(page = 1, itemsPerPage = 50) {
@@ -266,9 +265,7 @@
     }
 
 
-    // Function to handle pagination
-    let currentPage = 1;
-    const itemsPerPage = 50;
+
 
     function updatePaginationButtons() {
       document.getElementById('currentPage').textContent = `Page ${currentPage}`;
