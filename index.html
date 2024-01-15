@@ -5,15 +5,15 @@
   <title>CRM Walk In</title>
   <link rel="icon" href="imgs\CRM-16x16.png" sizes="16x16" type="image/png">
   <link rel="icon" href="imgs\CRM-32x32.png" sizes="32x32" type="image/png">
-  <link rel="stylesheet" href="loginstyles.css">
+  <link rel="stylesheet" href="css/loginstyles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
   <div class="header">
-    <img src="logo.png" alt="Your Logo" class="logo">
+    <img src="imgs/logo.png" alt="Your Logo" class="logo">
   </div>
 
-  <div class="login-container">
+  <div class="form-container">
 
     <form id="loginForm">
       <label for="email">Email:</label>
@@ -28,32 +28,25 @@
     <div id="errorMessage" style="display: none; color: red;"></div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import firebaseConfig from './firebaseConfig.js';
+  <div class="form-container">
+    <form id="signupForm">
+      <label for="email">Email:</label>
+      <input type="email" id="signup-email" name="email" required>
+  
+      <label for="password">Password:</label>
+      <input type="password" id="signup-password" name="password" required>
+  
+      <label for="confirmPassword">Confirm Password:</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" required>
+
+      <div id="passwordMismatch" style="display: none; color: red; margin-bottom: 10px;">Passwords do not match</div>
+      <div id="errorMessage-signup" style="display: none; color: red; margin-bottom: 10px;"></div>
+  
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
 
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    document.getElementById('loginForm').addEventListener('submit', async function(event) {
-      event.preventDefault();
-
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // On successful login, redirect the user
-        window.location.href = "list.html"; // Redirect to the list page after successful login
-      } catch (error) {
-        // Show error message for failed login
-        document.getElementById('errorMessage').textContent = "Login failed. Please check your credentials.";
-        document.getElementById('errorMessage').style.display = "block";
-        console.error('Login failed:', error.message);
-      }
-    });
-  </script>
+  <script src="js/session_login.js" type="module"></script>
 </body>
 </html>

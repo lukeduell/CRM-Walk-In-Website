@@ -224,3 +224,13 @@ li {
 .list-color {
     margin-right: 50px; /* Adjust the margin as needed for desired spacing */
 }
+
+.logout-btn {
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}

@@ -5,12 +5,13 @@
   <title>Visitor Management System</title>
   <link rel="icon" href="imgs\CRM-16x16.png" sizes="16x16" type="image/png">
   <link rel="icon" href="imgs\CRM-32x32.png" sizes="32x32" type="image/png">
-  <link rel="stylesheet" href="addstyle.css">
+  <link rel="stylesheet" href="css/addstyle.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
   <div class="header">
     <h1>Add a New Entry</h1>
+    <button type="button" id="printTagBtn">Print Tag</button>
   </div>
 
   <form id="visitorForm" class="form-container">
@@ -24,10 +25,10 @@
         <input type="date" id="dateArrived" name="dateArrived" required>
         <input type="time" id="timeArrived" name="timeArrived" required><br><br>        
       
-        <label for="notes">Notes:</label>
+        <label for="notes">Notes:</label><br>
         <textarea id="notes" name="notes" rows="4" cols="50"></textarea><br><br>
       
-        <label for="description">Description:</label>
+        <label for="description">Description:</label><br>
         <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
       
         <label for="blast">Blast:</label>
@@ -41,9 +42,8 @@
       
         <label for="status">Status:</label>
         <select id="status" name="status" required>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Pending">Pending</option>
+          <option value="Incomplete">Incomplete</option>
+          <option value="Complete">Complete</option>
         </select><br><br>
 
         <input type="file" id="fileInput" class="custom-file-input" accept="image/*" multiple><br><br>
@@ -54,100 +54,6 @@
   </form>
 
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"; // Import Timestamp separately
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-    import firebaseConfig from './firebaseConfig.js';
-
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in.
-        // Call the function to display entries
-      } else {
-        // No user is signed in.
-        // Redirect to the login page or handle authentication as needed
-        window.location.href = "index.html";
-      }
-    });
-
-    // Function to handle form submission
-    document.getElementById('visitorForm').addEventListener('submit', async function(event) {
-      event.preventDefault();
-
-      // Collect form input values...
-      const firstAndLast = document.getElementById('firstName').value;
-      const phoneNum = document.getElementById('phoneNum').value;
-      const dateArrivedInput = document.getElementById('dateArrived').value;
-      const timeArrivedInput = document.getElementById('timeArrived').value;
-      const combinedDateTime = new Date(`${dateArrivedInput}T${timeArrivedInput}`);
-      const dateArrived = Timestamp.fromDate(new Date(combinedDateTime));
-      const notes = document.getElementById('notes').value;
-      const description = document.getElementById('description').value;
-      const blast = document.getElementById('blast').checked;
-      const prime = document.getElementById('prime').checked;
-      const color = document.getElementById('color').value;
-      const status = document.getElementById('status').value;
-
-      // Add data to Firebase Firestore in the "CustomerCollection" collection
-      try {
-        const docRef = await addDoc(collection(db, 'CustomerCollection'), {
-          blast: blast,
-          color: color,
-          date: dateArrived,
-          description: description,
-          firstandlast: firstAndLast,
-          notes: notes,
-          phonenum: phoneNum,
-          prime: prime,
-          status: status,
-          appmade: "true"
-        });
-        // Create a corresponding folder in Firebase Storage
-        const storageRef = ref(storage, `${docRef.id}`);
-        await uploadImages(storageRef); // Pass the storage reference
-
-        console.log('Document written with ID: ', docRef.id);
-        // Clear the form after successful submission
-        document.getElementById('visitorForm').reset();
-        window.location.href = 'list.html'; // Redirect to list page on success
-      } catch (error) {
-        console.error('Error adding document: ', error);
-        document.getElementById('errorText').style.display = 'block'; // Display error message
-      }
-    });
-
-    async function uploadImages(storageRef) {
-      const fileInput = document.getElementById('fileInput');
-      const fileList = fileInput.files;
-
-      // Loop through each file in the fileList
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        const imageName = `image_${i}`; // Change the naming convention as needed
-        const imageRef = ref(storageRef, imageName);
-
-        try {
-          await uploadBytes(imageRef, file);
-          console.log(`Image ${i + 1} uploaded successfully.`);
-        } catch (error) {
-          console.error(`Error uploading image ${i + 1}:`, error);
-          // Handle errors here
-        }
-      }
-    }
-
-  </script>
+  <script src="js/add.js" type="module"></script>
 </body>
 </html>
